@@ -24,6 +24,9 @@ private:
     void *display;
     EGLSurface surface;
     EGLContext context;
+    GLuint VAO, VBO, EBO;
+    GLuint textureId;
+    unsigned int programId;
 };
 
 #endif //FFMPEGLEARN_OPENGLLEARN_HPP
