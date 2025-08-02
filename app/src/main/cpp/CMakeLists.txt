@@ -116,4 +116,6 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
         android
         log
         OpenSLES
+        GLESv3
+        EGL
 )

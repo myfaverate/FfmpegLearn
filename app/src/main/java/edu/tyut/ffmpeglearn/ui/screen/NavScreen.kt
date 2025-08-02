@@ -31,7 +31,7 @@ internal fun NavScreen(
         NavHost(
             modifier = modifier,
             navController = navHostController,
-            startDestination = Routes.Mp4
+            startDestination = Routes.Surface
         ) {
             composable<Routes.Greeting>{
                 Greeting(
@@ -60,6 +60,13 @@ internal fun NavScreen(
             composable<Routes.Mp4> { navBackStackEntry:  NavBackStackEntry ->
                 Log.i(TAG, "NavScreen -> mp4")
                 Mp4Screen(
+                    navHostController = navHostController,
+                    snackBarHostState = snackBarHostState,
+                )
+            }
+            composable<Routes.Surface> { navBackStackEntry:  NavBackStackEntry ->
+                Log.i(TAG, "NavScreen -> Surface")
+                SurfaceScreen(
                     navHostController = navHostController,
                     snackBarHostState = snackBarHostState,
                 )

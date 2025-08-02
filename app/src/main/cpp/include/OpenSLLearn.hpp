@@ -17,8 +17,8 @@ extern "C" {
 #include "logging.hpp"
 
 struct PlaybackContext {
-    std::shared_ptr<std::ifstream> pcmFile;
-    std::shared_ptr<std::vector<char>> buffer;
+    std::unique_ptr<std::ifstream> pcmFile;
+    std::unique_ptr<std::vector<char>> buffer;
     SLObjectItf playerObject;
     SLObjectItf engineObject;
     SLObjectItf outputMixObject;

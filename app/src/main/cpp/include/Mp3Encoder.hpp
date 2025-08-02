@@ -6,7 +6,7 @@
 #define FFMPEGLEARN_MP3ENCODER_HPP
 #include <fstream>
 #include <string>
-#include<vector>
+#include <vector>
 #include <optional>
 #include "lame.h"
 #include "logging.hpp"

@@ -3,6 +3,7 @@ package edu.tyut.ffmpeglearn.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import android.view.Surface
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileDescriptor
@@ -44,6 +45,8 @@ internal object Utils {
      */
     external fun stringFromJNI(): String
     external fun playPcmWithOpenSL(pcmPath: String): Boolean
+    external fun nativeRender(surface: Surface): Long
+    external fun nativeRenderRelease(ptr: Long)
     external fun nativeTest(): String
     external fun getFfmpegInfo(): String
     external fun getVideoInfo(videoFd: Int): String

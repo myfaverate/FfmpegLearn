@@ -32,6 +32,7 @@
 #include "Mp3Encoder.hpp"
 #include "FFmpegDecoder.hpp"
 #include "OpenSLLearn.hpp"
+#include "OpenGLLearn.hpp"
 
 
 constexpr const char* TAG = "ffmpegLearn";
@@ -609,4 +610,25 @@ Java_edu_tyut_ffmpeglearn_utils_Utils_playPcmWithOpenSL(JNIEnv *env, jobject thi
     playPcm(pcmPath);
     env->ReleaseStringUTFChars(pcm_path, pcmPath);
     return true;
+}
+extern "C"
+JNIEXPORT jlong JNICALL
+Java_edu_tyut_ffmpeglearn_utils_Utils_nativeRender(JNIEnv *env, jobject thiz, jobject surface) {
+    if (surface == nullptr){
+        logger::info(TAG, "surface is null");
+    }
+    ANativeWindow* window = ANativeWindow_fromSurface(env, surface);
+    if (window == nullptr){
+        logger::info(TAG, "window is null");
+        return 0;
+    }
+    auto openGLLearn = new OpenGLLearn(window);
+    openGLLearn->render();
+    return reinterpret_cast<jlong>(openGLLearn);;
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_edu_tyut_ffmpeglearn_utils_Utils_nativeRenderRelease(JNIEnv *env, jobject thiz, jlong ptr) {
+    auto* render = reinterpret_cast<OpenGLLearn*>(ptr);
+    delete render;
 }

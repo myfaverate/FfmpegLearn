@@ -6,9 +6,22 @@ constexpr const char *TAG = "OpenSLLearn";
 
 // 桥接函数，OpenSL 会调用它
 void bufferCallback(SLAndroidSimpleBufferQueueItf queue, void* context) {
-    auto* func = static_cast<std::function<void(SLAndroidSimpleBufferQueueItf)>*>(context);
-    if (func && *func) {
-        (*func)(queue);
+    auto *ctx = static_cast<PlaybackContext*>(context);
+    auto &pcmFile = ctx->pcmFile;
+    auto &buffer = ctx->buffer;
+    pcmFile->read(buffer->data(), static_cast<std::streamsize>(buffer->size()));
+    auto readSize = pcmFile->gcount();
+    if (readSize > 0) {
+        SLresult result = (*queue)->Enqueue(queue, buffer->data(), readSize);
+        if (result != SL_RESULT_SUCCESS){
+            logger::error(TAG, "Enqueue failed: %d", result);
+        }
+    } else {
+        logger::info(TAG, "播放结束...");
+        (*ctx->playerObject)->Destroy(ctx->playerObject);
+        (*ctx->outputMixObject)->Destroy(ctx->outputMixObject);
+        (*ctx->engineObject)->Destroy(ctx->engineObject);
+        delete ctx;  // 一次释放所有资源
     }
 }
 
@@ -58,47 +71,26 @@ void playPcm(const std::string &pcmPath){
 
     // std::ifstream pcmFile(pcmPath, std::ios::binary);
     // 创建共享资源
-    auto pcmFile = std::make_shared<std::ifstream>(pcmPath, std::ios::binary);
+    auto pcmFile = std::make_unique<std::ifstream>(pcmPath, std::ios::binary);
 
     if (!pcmFile->is_open()){
         throw std::runtime_error("文件打开错误...");
     }
 
     // std::vector<char> buffer(4096);
-    auto buffer = std::make_shared<std::vector<char>>(4096);
+    auto buffer = std::make_unique<std::vector<char>>(4096);
 
-
-    // 创建 lambda 并用 std::function 包裹
-    // 为了防止 lambda 被释放，持有它
-    static auto staticHoldBuffer = buffer;
-    static auto staticHoldFile = pcmFile;
-    auto callback = new std::function<void(SLAndroidSimpleBufferQueueItf)>();
-    *callback = [=](SLAndroidSimpleBufferQueueItf queue) {
-        if (!pcmFile->is_open()) return;
-
-        if (pcmFile->eof()) {
-            logger::info(TAG, "PCM 播放完毕");
-            pcmFile->close();
-            staticHoldBuffer.reset();
-            staticHoldFile.reset();
-            delete callback;
-            return;
-        }
-        pcmFile->read(buffer->data(), static_cast<std::streamsize>(buffer->size()));
-        std::streamsize read = pcmFile->gcount();
-        logger::info(TAG, "readSize: %d", read);
-        if (read > 0) {
-            SLresult result = (*queue)->Enqueue(queue, buffer->data(), read);
-            if (result != SL_RESULT_SUCCESS){
-                logger::error(TAG, "Enqueue failed: %d", result);
-            }
-        }
+    auto *playBackContext = new PlaybackContext{
+        std::move(pcmFile),
+        std::move(buffer),
+        playerObject,
+        engineObject,
+        outputMixObject,
     };
 
-
-    (*bufferQueue)->RegisterCallback(bufferQueue, bufferCallback, callback);
+    (*bufferQueue)->RegisterCallback(bufferQueue, bufferCallback, static_cast<void*>(playBackContext));
 
     (*playerPlay)->SetPlayState(playerPlay, SL_PLAYSTATE_PLAYING);
-    bufferCallback(bufferQueue, callback);
+    bufferCallback(bufferQueue, playBackContext);
 
 }
