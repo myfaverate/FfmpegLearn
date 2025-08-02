@@ -20,6 +20,7 @@ internal class AudioRecordManager internal constructor(
 ) {
     // 立体声音
     // ffplay -f s16le -ar 44100 -ch_layout stereo -i pcm1.pcm
+    // ffplay -f s16le -ar 16000 -ch_layout mono -i hello.pcm
     // ffplay -f rawvideo -vf format=yuv420p -video_size 662x1280 output.yuv
     // git branch --set-upstream-to=origin/<远程分支名> <本地分支名>
     private val channelMask: Int = AudioFormat.CHANNEL_IN_STEREO

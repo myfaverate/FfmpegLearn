@@ -30,8 +30,8 @@
 #include "lame.h"
 // #include "sRTGenerator.cpp"
 #include "Mp3Encoder.hpp"
-
 #include "FFmpegDecoder.hpp"
+#include "OpenSLLearn.hpp"
 
 
 constexpr const char* TAG = "ffmpegLearn";
@@ -599,5 +599,14 @@ Java_edu_tyut_ffmpeglearn_utils_Utils_extractYumPcmFromMp4(JNIEnv *env, jobject 
     logger::info(TAG, "是否是直接拷贝: %d", isCopy == JNI_TRUE);
     extractYumPcmFromMp4(videPath);
     env->ReleaseStringUTFChars(video_path, videPath);
+    return true;
+}
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_edu_tyut_ffmpeglearn_utils_Utils_playPcmWithOpenSL(JNIEnv *env, jobject thiz,
+                                                        jstring pcm_path) {
+    const char *pcmPath = env->GetStringUTFChars(pcm_path, nullptr);
+    playPcm(pcmPath);
+    env->ReleaseStringUTFChars(pcm_path, pcmPath);
     return true;
 }

@@ -501,6 +501,9 @@ export RESULT=arm64-v8a
 export RESULT=x86
 export RESULT=x86_64
 cp -R ~/lame-3.100/android_build/${RESULT}/lib/* ~/ffmpeg/android_build/${RESULT}/lib/* ~/x264/android_build/${RESULT}/lib/* ~/freetype/android_build/${RESULT}/lib/* ~/harfbuzz-main/android_build/${RESULT}/lib/* ~/fribidi/android_build/${RESULT}/lib/* /mnt/d/SoftWare/Android/AndroidProjects/KotlinAndroids/FfmpegLearn/app/src/main/jniLibs/${RESULT}/
+
+
+cp ~/x265_git/build/android_${RESULT}/android_build/${RESULT}/lib/libx265.so /mnt/d/SoftWare/Android/AndroidProjects/KotlinAndroids/FfmpegLearn/app/src/main/jniLibs/${RESULT}/
 ```
 
 ## zlib

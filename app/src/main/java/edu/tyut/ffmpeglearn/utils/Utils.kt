@@ -43,6 +43,7 @@ internal object Utils {
      * which is packaged with this application.
      */
     external fun stringFromJNI(): String
+    external fun playPcmWithOpenSL(pcmPath: String): Boolean
     external fun nativeTest(): String
     external fun getFfmpegInfo(): String
     external fun getVideoInfo(videoFd: Int): String

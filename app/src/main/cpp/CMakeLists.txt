@@ -114,4 +114,6 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
         mp3lame
         # List libraries link to the target library
         android
-        log)
+        log
+        OpenSLES
+)
