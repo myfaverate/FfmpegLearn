@@ -73,8 +73,15 @@ internal fun Mp4Screen(
                         launcher.launch(permissions)
                         return@clickable
                     }
-                    val pcmPath = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "pcm1.pcm").absolutePath
-                    Utils.playPcmWithOpenSL(pcmPath = pcmPath)
+                    val pcmPath = File(
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                        "pcm1.pcm"
+                    ).absolutePath
+                    val videoPath = File(
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                        "video1.mp4"
+                    ).absolutePath
+                    Log.i(TAG, "Mp4Screen -> duration: ${Utils.getVideoDuration(videoPath)}")
                 },
             color = Color.White
         )

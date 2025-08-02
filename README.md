@@ -28,6 +28,119 @@ zsh@zsh:~/fribidi/android_build/arm64-v8a/lib$ readelf -l libfribidi.so | grep -
                  0x000000000000004c 0x0000000000000260  RW     0x4000
 ```
 
+### ffmpeg 一键脚本
+```shell
+#!/bin/bash
+set -e
+
+export ANDROID_NDK=/home/zsh/android-ndk-r27c
+export LDFLAGS="-Wl,-z,max-page-size=16384"
+
+TOOLCHAIN=$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64
+BIN_DIR=$TOOLCHAIN/bin
+SYSROOT=$TOOLCHAIN/sysroot
+
+ARCHS=("arm64-v8a" "armeabi-v7a" "x86" "x86_64")
+ARCH_IDS=("aarch64" "arm" "x86" "x86_64")
+CPUS=("armv8-a" "armv7-a" "i686" "x86-64")
+TARGETS=("aarch64-linux-android" "armv7a-linux-androideabi" "i686-linux-android" "x86_64-linux-android")
+
+for i in "${!ARCHS[@]}"; do
+  RESULT=${ARCHS[$i]}
+  ARCH=${ARCH_IDS[$i]}
+  CPU=${CPUS[$i]}
+  TARGET=${TARGETS[$i]}
+
+  echo "==== Building for $RESULT ===="
+
+  export LAME_PATH=/home/zsh/lame-3.100/android_build/${RESULT}
+  export LIBSRTP_PATH=/home/zsh/libsrtp/android_build/${RESULT}
+  export PKG_CONFIG_PATH=/home/zsh/freetype/android_build/${RESULT}/lib/pkgconfig:/home/zsh/fribidi/android_build/${RESULT}/lib/pkgconfig:/home/zsh/harfbuzz-main/android_build/${RESULT}/lib/pkgconfig:/home/zsh/libass/android_build/${RESULT}/lib/pkgconfig:/home/zsh/zlib-1.3.1/android_build/${RESULT}/lib/pkgconfig:/home/zsh/x264/android_build/${RESULT}/lib/pkgconfig:/home/zsh/lame-3.100/android_build/${RESULT}/lib/pkgconfig:/home/zsh/x265_git/build/android_${RESULT}/android_build/${RESULT}/lib/pkgconfig:/home/zsh/opus-1.5.2/android_build/${RESULT}/lib/pkgconfig:/home/zsh/libvpx-main/android_build/${RESULT}/lib/pkgconfig
+
+  CROSS_PREFIX=$BIN_DIR/${TARGET}-
+  CC=$BIN_DIR/${TARGET}24-clang
+  CXX=$BIN_DIR/${TARGET}24-clang++
+  
+  # 特殊判断x86架构，添加--disable-asm
+  DISABLE_ASM=""
+  if [ "$RESULT" == "x86" ]; then
+    DISABLE_ASM="--disable-asm"
+  fi
+
+
+  ./configure \
+    --target-os=android \
+    --arch=$ARCH \
+    --cpu=$CPU \
+    --pkg-config=pkg-config \
+    --enable-cross-compile \
+    --cross-prefix=$CROSS_PREFIX \
+    --cc=$CC \
+    --cxx=$CXX \
+    --nm=$BIN_DIR/llvm-nm \
+    --ar=$BIN_DIR/llvm-ar \
+    --ranlib=$BIN_DIR/llvm-ranlib \
+    --strip=$BIN_DIR/llvm-strip \
+    --sysroot=$SYSROOT \
+    --prefix=./android_build/$RESULT \
+    --disable-doc \
+    --enable-avdevice \
+    --enable-network \
+    --enable-postproc \
+    --enable-libvpx \
+    --enable-libopus \
+    --enable-protocol=srtp \
+    --disable-programs \
+    --enable-lto \
+    --enable-libfreetype \
+    --enable-libharfbuzz \
+    --enable-libass \
+    --enable-libfribidi \
+    --enable-avcodec \
+    --enable-avformat \
+    --enable-avutil \
+    --enable-swscale \
+    --enable-swresample \
+    --enable-muxer=mp4,matroska,mp3,h264 \
+    --enable-decoder=h264,aac,mp3,ass,subrip \
+    --enable-encoder=aac,libx264,libmp3lame \
+    --enable-parser=h264,aac \
+    --enable-filter=scale,overlay,drawtext,hue \
+    --enable-bsf=aac_adtstoasc,h264_mp4toannexb \
+    --enable-zlib \
+    --enable-libx264 \
+    --enable-libx265 \
+    --enable-jni \
+    --enable-mediacodec \
+    --enable-decoder=h264_mediacodec \
+    --enable-decoder=hevc_mediacodec \
+    --enable-encoder=h264_mediacodec \
+    --enable-encoder=hevc_mediacodec \
+    --enable-libmp3lame \
+    --enable-gpl \
+    --enable-demuxers \
+    --enable-decoders \
+    --enable-parsers \
+    --enable-protocols \
+    --disable-x86asm \
+    $DISABLE_ASM \
+    --disable-static \
+    --enable-shared \
+    --enable-small \
+    --extra-cflags="-I$LAME_PATH/include -I$LIBSRTP_PATH/include" \
+    --extra-ldflags="-L$LAME_PATH/lib -lmp3lame -lm -L$LIBSRTP_PATH/lib -lsrtp3"
+
+  make clean
+  make -j$(nproc)
+  make install
+
+  echo "Build for $RESULT finished."
+done
+
+echo "✅ All architectures built and installed."
+
+```
+
 # armeabi-v7a arm32
 ```shell
 export ANDROID_NDK=/home/zsh/android-ndk-r27c
@@ -70,7 +183,8 @@ export RESULT=armeabi-v7a
 #export RESULT=x86
 
 export LAME_PATH=/home/zsh/lame-3.100/android_build/${RESULT}
-export PKG_CONFIG_PATH=/home/zsh/freetype/android_build/${RESULT}/lib/pkgconfig:/home/zsh/fribidi/android_build/${RESULT}/lib/pkgconfig:/home/zsh/harfbuzz-main/android_build/${RESULT}/lib/pkgconfig:/home/zsh/libass/android_build/${RESULT}/lib/pkgconfig:/home/zsh/zlib-1.3.1/android_build/${RESULT}/lib/pkgconfig:/home/zsh/x264/android_build/${RESULT}/lib/pkgconfig:/home/zsh/lame-3.100/android_build/${RESULT}/lib/pkgconfig:/home/zsh/x265_git/build/android_${RESULT}/android_build/${RESULT}/lib/pkgconfig
+export PKG_CONFIG_PATH=/home/zsh/freetype/android_build/${RESULT}/lib/pkgconfig:/home/zsh/fribidi/android_build/${RESULT}/lib/pkgconfig:/home/zsh/harfbuzz-main/android_build/${RESULT}/lib/pkgconfig:/home/zsh/libass/android_build/${RESULT}/lib/pkgconfig:/home/zsh/zlib-1.3.1/android_build/${RESULT}/lib/pkgconfig:/home/zsh/x264/android_build/${RESULT}/lib/pkgconfig:/home/zsh/lame-3.100/android_build/${RESULT}/lib/pkgconfig:/home/zsh/x265_git/build/android_${RESULT}/android_build/${RESULT}/lib/pkgconfig/
+:
 # 依赖验证
 pkg-config --cflags libass
 pkg-config --cflags harfbuzz
@@ -79,6 +193,8 @@ pkg-config --cflags freetype2
 pkg-config --cflags fribidi
 pkg-config --cflags x264
 pkg-config --cflags x265
+pkg-config --cflags opus
+pkg-config --cflags vpx
 
 ./configure \
   --target-os=android \
@@ -95,10 +211,12 @@ pkg-config --cflags x265
   --sysroot=$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot \
   --prefix=./android_build/${RESULT} \
   --disable-doc \
-  --disable-avdevice \
-  --disable-network \
+  --enable-avdevice \
+  --enable-network \
+  --enable-postproc \
+  --enable-libvpx \
+  --enable-libopus \
   --disable-programs \
-  --disable-postproc \
   --enable-lto \
   --enable-libfreetype \
   --enable-libharfbuzz \
@@ -135,8 +253,8 @@ pkg-config --cflags x265
   --disable-static \
   --enable-shared \
   --enable-small \
-  --extra-cflags="-I$LAME_PATH/include" \
-  --extra-ldflags="-L$LAME_PATH/lib -lmp3lame -lm" 
+  --extra-cflags="-I$LAME_PATH/include -I$LIBSRTP_PATH/include" \
+  --extra-ldflags="-L$LAME_PATH/lib -lmp3lame -lm -L$LIBSRTP_PATH/lib -lsrtp3"  
 # 不知道pkg-config --cflags libmp3lame 为什么没有生效
 make clean && make -j$(nproc) && make install
 ```
@@ -194,7 +312,9 @@ export RESULT=arm64-v8a
 #export RESULT=x86
 
 export LAME_PATH=/home/zsh/lame-3.100/android_build/${RESULT}
-export PKG_CONFIG_PATH=/home/zsh/freetype/android_build/${RESULT}/lib/pkgconfig:/home/zsh/fribidi/android_build/${RESULT}/lib/pkgconfig:/home/zsh/harfbuzz-main/android_build/${RESULT}/lib/pkgconfig:/home/zsh/libass/android_build/${RESULT}/lib/pkgconfig:/home/zsh/zlib-1.3.1/android_build/${RESULT}/lib/pkgconfig:/home/zsh/x264/android_build/${RESULT}/lib/pkgconfig:/home/zsh/lame-3.100/android_build/${RESULT}/lib/pkgconfig:/home/zsh/x265_git/build/android_${RESULT}/android_build/${RESULT}/lib/pkgconfig
+export LIBSRTP_PATH=/home/zsh/libsrtp/android_build/${RESULT}
+export PKG_CONFIG_PATH=/home/zsh/freetype/android_build/${RESULT}/lib/pkgconfig:/home/zsh/fribidi/android_build/${RESULT}/lib/pkgconfig:/home/zsh/harfbuzz-main/android_build/${RESULT}/lib/pkgconfig:/home/zsh/libass/android_build/${RESULT}/lib/pkgconfig:/home/zsh/zlib-1.3.1/android_build/${RESULT}/lib/pkgconfig:/home/zsh/x264/android_build/${RESULT}/lib/pkgconfig:/home/zsh/lame-3.100/android_build/${RESULT}/lib/pkgconfig:/home/zsh/x265_git/build/android_${RESULT}/android_build/${RESULT}/lib/pkgconfig\
+:/home/zsh/opus-1.5.2/android_build/${RESULT}/lib/pkgconfig:/home/zsh/libvpx-main/android_build/${RESULT}/lib/pkgconfig
 # 依赖验证
 pkg-config --cflags libass
 pkg-config --cflags libmp3lame
@@ -203,6 +323,8 @@ pkg-config --cflags freetype2
 pkg-config --cflags fribidi
 pkg-config --cflags x264
 pkg-config --cflags x265
+pkg-config --cflags opus
+pkg-config --cflags vpx
 
 ./configure \
   --target-os=android \
@@ -219,10 +341,13 @@ pkg-config --cflags x265
   --sysroot=$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot \
   --prefix=./android_build/arm64-v8a \
   --disable-doc \
-  --disable-avdevice \
-  --disable-network \
+  --enable-avdevice \
+  --enable-network \
+  --enable-postproc \
+  --enable-libvpx \
+  --enable-libopus \
+  --enable-protocol=srtp \
   --disable-programs \
-  --disable-postproc \
   --enable-lto \
   --enable-libfreetype \
   --enable-libharfbuzz \
@@ -240,7 +365,6 @@ pkg-config --cflags x265
   --enable-filter=scale,overlay,drawtext,hue \
   --enable-bsf=aac_adtstoasc,h264_mp4toannexb \
   --enable-zlib \
-  --enable-libass \
   --enable-libx264 \
   --enable-libx265 \
   --enable-jni \
@@ -259,10 +383,12 @@ pkg-config --cflags x265
   --disable-static \
   --enable-shared \
   --enable-small \
-  --extra-cflags="-I$LAME_PATH/include" \
-  --extra-ldflags="-L$LAME_PATH/lib -lmp3lame -lm" 
+  --extra-cflags="-I$LAME_PATH/include -I$LIBSRTP_PATH/include" \
+  --extra-ldflags="-L$LAME_PATH/lib -lmp3lame -lm -L$LIBSRTP_PATH/lib -lsrtp3"  
   
 make clean && make -j$(nproc) && make install
+readelf -d ffmpeg_build/bin/ffmpeg | grep srtp
+
 ```
 
 # x86
@@ -375,8 +501,8 @@ pkg-config --cflags x265
   --disable-static \
   --enable-shared \
   --enable-small \
-  --extra-cflags="-I$LAME_PATH/include" \
-  --extra-ldflags="-L$LAME_PATH/lib -lmp3lame -lm" 
+  --extra-cflags="-I$LAME_PATH/include -I$LIBSRTP_PATH/include" \
+  --extra-ldflags="-L$LAME_PATH/lib -lmp3lame -lm -L$LIBSRTP_PATH/lib -lsrtp3"  
   
 make clean && make -j$(nproc) && make install
 ```
@@ -500,10 +626,11 @@ export RESULT=armeabi-v7a
 export RESULT=arm64-v8a
 export RESULT=x86
 export RESULT=x86_64
-cp -R ~/lame-3.100/android_build/${RESULT}/lib/* ~/ffmpeg/android_build/${RESULT}/lib/* ~/x264/android_build/${RESULT}/lib/* ~/freetype/android_build/${RESULT}/lib/* ~/harfbuzz-main/android_build/${RESULT}/lib/* ~/fribidi/android_build/${RESULT}/lib/* /mnt/d/SoftWare/Android/AndroidProjects/KotlinAndroids/FfmpegLearn/app/src/main/jniLibs/${RESULT}/
+cp -R ~/lame-3.100/android_build/${RESULT}/lib/* ~/ffmpeg/android_build/${RESULT}/lib/* ~/x264/android_build/${RESULT}/lib/* ~/freetype/android_build/${RESULT}/lib/* ~/harfbuzz-main/android_build/${RESULT}/lib/* ~/fribidi/android_build/${RESULT}/lib/* /mnt/d/SoftWare/Android/AndroidProjects/KotlinAndroids/FfmpegLearn/app/src/main/jniLibs/${RESULT}/ \
+~/x265_git/build/android_${RESULT}/android_build/${RESULT}/lib/libx265.so /home/zsh/libsrtp/android_build/${RESULT}/lib/libsrtp3.so /mnt/d/SoftWare/Android/AndroidProjects/KotlinAndroids/FfmpegLearn/app/src/main/jniLibs/${RESULT}/
 
 
-cp ~/x265_git/build/android_${RESULT}/android_build/${RESULT}/lib/libx265.so /mnt/d/SoftWare/Android/AndroidProjects/KotlinAndroids/FfmpegLearn/app/src/main/jniLibs/${RESULT}/
+cp /home/zsh/openssl-master/build/${RESULT}/lib/libcrypto.so /mnt/d/SoftWare/Android/AndroidProjects/KotlinAndroids/FfmpegLearn/app/src/main/jniLibs/${RESULT}/
 ```
 
 ## zlib
@@ -879,7 +1006,7 @@ build_android_arm64.sh
 #### arm64-v8a
 ```shell
 #!/bin/bash
-
+set -e
 # 修改为你的实际 NDK 路径
 NDK=/home/zsh/android-ndk-r27c
 API=24
@@ -898,7 +1025,7 @@ cmake ../../source \
     -DENABLE_CLI=OFF \
     -DEXPORT_C_API=ON \
     -DHIGH_BIT_DEPTH=OFF \
-    -DENABLE_SHARED=ON \
+    -BUILD_SHARED_LIBS=ON \
     -DENABLE_ASSEMBLY=OFF \
     -DCMAKE_STRIP=$TOOLCHAIN/bin/llvm-strip \
     -DCMAKE_INSTALL_PREFIX=$(pwd)/android_build/arm64-v8a \
@@ -1095,6 +1222,273 @@ export RESULT=arm64-v8a
 make clean && make -j$(nproc) && make install
 ```
 实现 pcm 转 mp3
+
+## libsrtp 编译
+```shell
+# arm64-v8a
+#!/bin/bash
+set -e
+# 修改为你的实际 NDK 路径
+NDK=/home/zsh/android-ndk-r27c
+API=24
+TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/linux-x86_64
+ARCH=arm64-v8a
+OPENSSL_ROOT=/home/zsh/openssl-master/build/$ARCH
+TARGET=aarch64-linux-android
+cmake ../../ \
+    -DCMAKE_TOOLCHAIN_FILE=$NDK/build/cmake/android.toolchain.cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DANDROID_ABI=${ARCH} \
+    -DANDROID_PLATFORM=android-${API} \
+    -DCMAKE_SYSTEM_NAME=Android \
+    -DCMAKE_C_COMPILER=$TOOLCHAIN/bin/${TARGET}${API}-clang \
+    -DCMAKE_CXX_COMPILER=$TOOLCHAIN/bin/${TARGET}${API}-clang++ \
+    -DENABLE_PIC=ON \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+    -DENABLE_CLI=OFF \
+    -DEXPORT_C_API=ON \
+    -DHIGH_BIT_DEPTH=OFF \
+    -DBUILD_SHARED_LIBS=ON \
+    -DENABLE_ASSEMBLY=OFF \
+    -DLIBSRTP_TEST_APPS=OFF \
+    -DENABLE_OPENSSL=ON \
+    -DOPENSSL_ROOT_DIR=$OPENSSL_ROOT \
+    -DOPENSSL_INCLUDE_DIR=$OPENSSL_ROOT/include \
+    -DOPENSSL_CRYPTO_LIBRARY=$OPENSSL_ROOT/lib/libcrypto.so \
+    -DCMAKE_STRIP=$TOOLCHAIN/bin/llvm-strip \
+    -DCMAKE_INSTALL_PREFIX=$(pwd)/android_build/${ARCH} \
+    -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-z,max-page-size=16384"
+
+make clean && make -j$(nproc) && make install
+
+# 一键脚本
+#!/bin/bash
+set -e
+
+# 修改为你的实际 NDK 路径
+NDK=/home/zsh/android-ndk-r27c
+API=24
+TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/linux-x86_64
+
+# 支持的架构和相关配置
+ARCHS=("arm64-v8a" "armeabi-v7a" "x86" "x86_64")
+TARGETS=("aarch64-linux-android" "armv7a-linux-androideabi" "i686-linux-android" "x86_64-linux-android")
+
+# 工程路径（根据你实际情况修改）
+SOURCE_DIR=$(pwd)
+BUILD_DIR=$SOURCE_DIR/build-android
+INSTALL_DIR=$(pwd)/android_build
+
+mkdir -p "$BUILD_DIR"
+cd "$BUILD_DIR"
+
+for ((i=0; i<${#ARCHS[@]}; i++)); do
+    ARCH=${ARCHS[$i]}
+    TARGET=${TARGETS[$i]}
+    echo "====== Building for $ARCH ======"
+
+    OPENSSL_ROOT=/home/zsh/openssl-master/build/$ARCH
+
+    BUILD_SUBDIR=$BUILD_DIR/$ARCH
+    mkdir -p "$BUILD_SUBDIR"
+    cd "$BUILD_SUBDIR"
+
+    cmake $SOURCE_DIR/.. \
+        -DCMAKE_TOOLCHAIN_FILE=$NDK/build/cmake/android.toolchain.cmake \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DANDROID_ABI=${ARCH} \
+        -DANDROID_PLATFORM=android-${API} \
+        -DCMAKE_SYSTEM_NAME=Android \
+        -DCMAKE_C_COMPILER=$TOOLCHAIN/bin/${TARGET}${API}-clang \
+        -DCMAKE_CXX_COMPILER=$TOOLCHAIN/bin/${TARGET}${API}-clang++ \
+        -DCMAKE_STRIP=$TOOLCHAIN/bin/llvm-strip \
+        -DENABLE_PIC=ON \
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+        -DENABLE_CLI=OFF \
+        -DLIBSRTP_TEST_APPS=OFF \
+        -DENABLE_OPENSSL=ON \
+        -DOPENSSL_ROOT_DIR=$OPENSSL_ROOT \
+        -DOPENSSL_INCLUDE_DIR=$OPENSSL_ROOT/include \
+        -DOPENSSL_CRYPTO_LIBRARY=$OPENSSL_ROOT/lib/libcrypto.so \
+        -DBUILD_SHARED_LIBS=ON \
+        -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/$ARCH \
+        -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-z,max-page-size=16384"
+
+    make clean
+    make -j$(nproc)
+    make install
+
+    cd "$BUILD_DIR"
+done
+
+echo "✅ All architectures built and installed to: $INSTALL_DIR"
+
+```
+
+## opus 编译
+**一键脚本:**
+```shell
+#!/bin/bash
+set -e
+
+NDK=/home/zsh/android-ndk-r27c
+API=24
+TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/linux-x86_64
+
+ARCHS=("arm64-v8a" "armeabi-v7a" "x86" "x86_64")
+TARGETS=("aarch64-linux-android" "armv7a-linux-androideabi" "i686-linux-android" "x86_64-linux-android")
+
+SOURCE_DIR=$(pwd)
+BUILD_DIR=$SOURCE_DIR/build-android
+INSTALL_DIR=$SOURCE_DIR/android_build
+
+mkdir -p "$BUILD_DIR"
+
+for ((i=0; i<${#ARCHS[@]}; i++)); do
+    ARCH=${ARCHS[$i]}
+    TARGET=${TARGETS[$i]}
+    echo "====== Building for $ARCH ======"
+
+    BUILD_SUBDIR=$BUILD_DIR/$ARCH
+    mkdir -p "$BUILD_SUBDIR"
+    cd "$BUILD_SUBDIR"
+
+    cmake $SOURCE_DIR \
+        -DCMAKE_TOOLCHAIN_FILE=$NDK/build/cmake/android.toolchain.cmake \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DANDROID_ABI=${ARCH} \
+        -DANDROID_PLATFORM=android-${API} \
+        -DCMAKE_SYSTEM_NAME=Android \
+        -DCMAKE_C_COMPILER=$TOOLCHAIN/bin/${TARGET}${API}-clang \
+        -DCMAKE_CXX_COMPILER=$TOOLCHAIN/bin/${TARGET}${API}-clang++ \
+        -DCMAKE_STRIP=$TOOLCHAIN/bin/llvm-strip \
+        -DBUILD_SHARED_LIBS=ON \
+        -DENABLE_PIC=ON \
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+        -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/$ARCH \
+        -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-z,max-page-size=16384" \
+        -DANDROID_TOOLCHAIN=clang \
+        -DANDROID_STL=c++_static
+
+    cmake --build . --target clean || true
+    cmake --build . -- -j$(nproc)
+    cmake --build . --target install
+
+    echo "Installed to $INSTALL_DIR/$ARCH"
+    ls -l $INSTALL_DIR/$ARCH/lib
+
+    cd "$BUILD_DIR"
+done
+
+echo "✅ All architectures built and installed to: $INSTALL_DIR"
+
+```
+
+## libvpx 编译
+```shell
+#!/bin/bash
+set -e
+
+NDK=/home/zsh/android-ndk-r27c
+API=24
+TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/linux-x86_64
+
+ARCHS=("arm64-v8a" "armeabi-v7a" "x86" "x86_64")
+TARGETS=("arm64-android-gcc" "armv7-android-gcc" "x86-android-gcc" "x86_64-android-gcc")
+COMPILERS=("aarch64-linux-android" "armv7a-linux-androideabi" "i686-linux-android" "x86_64-linux-android")
+
+SOURCE_DIR=$(pwd)
+BUILD_DIR=$SOURCE_DIR/build-android
+INSTALL_DIR=$SOURCE_DIR/android_build
+
+mkdir -p $BUILD_DIR
+
+for ((i=0; i<${#ARCHS[@]}; i++)); do
+    ARCH=${ARCHS[$i]}
+    TARGET=${TARGETS[$i]}
+    COMPILER=${COMPILERS[$i]}
+
+    echo "====== Building libvpx for $ARCH ======"
+
+    BUILD_SUBDIR=$BUILD_DIR/$ARCH
+    mkdir -p $BUILD_SUBDIR
+    cd $BUILD_SUBDIR
+
+    export CC=$TOOLCHAIN/bin/${COMPILER}${API}-clang
+    export CXX=$TOOLCHAIN/bin/${COMPILER}${API}-clang++
+    export AR=$TOOLCHAIN/bin/llvm-ar
+    export NM=$TOOLCHAIN/bin/llvm-nm
+    export STRIP=$TOOLCHAIN/bin/llvm-strip
+
+    $SOURCE_DIR/configure \
+        --prefix=$INSTALL_DIR/$ARCH \
+        --target=$TARGET \
+        --enable-pic \
+        --disable-examples \
+        --disable-unit-tests \
+        --disable-docs \
+        --disable-install-docs \
+        --disable-tools \
+        --disable-neon \
+        --extra-cflags="-fPIC"
+
+    make clean || true
+    make -j$(nproc)
+    make install
+
+    echo "Installed libvpx to $INSTALL_DIR/$ARCH"
+
+    cd $BUILD_DIR
+done
+
+echo "✅ All done, installed to $INSTALL_DIR"
+
+```
+
+## openssl 编译 非常简单直接执行
+```shell
+#!/bin/bash
+set -e
+
+NDK=/home/zsh/android-ndk-r27c
+API=24
+OPENSSL_SRC_DIR=$PWD
+BUILD_DIR=$PWD/build
+
+# 编译四个架构
+ARCHS=("armeabi-v7a" "arm64-v8a" "x86" "x86_64")
+TARGETS=("android-arm" "android-arm64" "android-x86" "android-x86_64")
+TRIPLES=("armv7a-linux-androideabi" "aarch64-linux-android" "i686-linux-android" "x86_64-linux-android")
+
+for i in "${!ARCHS[@]}"; do
+  ARCH=${ARCHS[$i]}
+  TARGET=${TARGETS[$i]}
+  TRIPLE=${TRIPLES[$i]}
+  TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/linux-x86_64
+
+  echo "===> Building OpenSSL for $ARCH"
+
+  INSTALL_DIR=$BUILD_DIR/$ARCH
+  rm -rf $INSTALL_DIR
+  mkdir -p $INSTALL_DIR
+
+  export PATH=$TOOLCHAIN/bin:$PATH
+  export CC=$TOOLCHAIN/bin/${TRIPLE}${API}-clang
+  export LDFLAGS="-Wl,-z,max-page-size=16384"
+
+  ./Configure $TARGET \
+    --prefix=$INSTALL_DIR \
+    --openssldir=$INSTALL_DIR/ssl \
+    shared no-tests no-unit-test
+
+  make clean
+  make -j$(nproc)
+  make install_sw
+done
+
+echo "✅ OpenSSL build complete: $BUILD_DIR"
+
+```
 
 ## Windows 编译
 ```shell

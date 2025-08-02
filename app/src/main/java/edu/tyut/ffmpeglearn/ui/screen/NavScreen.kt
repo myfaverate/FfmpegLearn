@@ -31,7 +31,7 @@ internal fun NavScreen(
         NavHost(
             modifier = modifier,
             navController = navHostController,
-            startDestination = Routes.Surface
+            startDestination = Routes.Mp4
         ) {
             composable<Routes.Greeting>{
                 Greeting(

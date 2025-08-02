@@ -113,12 +113,26 @@ void OpenGLLearn::render() {
 
     stbi_image_free(imageData); // 用完就释放
 
+
+    float imageAspect = static_cast<float>(imageWidth) / static_cast<float>(imageHeight);
+    float screenAspect = static_cast<float>(width) / static_cast<float >(height);
+
+    float quadWidth = 1.0f;
+    float quadHeight = 1.0f;
+
+// 按照宽度铺满，高度居中裁剪或留空
+    if (imageAspect > screenAspect) {
+        quadHeight = screenAspect / imageAspect;
+    } else {
+        quadWidth = imageAspect / screenAspect;
+    }
+
     float vertices[] = {
-            // 位置       // 纹理坐标
-            -1.0f,  1.0f,  0.0f, 0.0f,  // 左上
-            -1.0f, -1.0f,  0.0f, 1.0f,  // 左下
-            1.0f, -1.0f,  1.0f, 1.0f,  // 右下
-            1.0f,  1.0f,  1.0f, 0.0f   // 右上
+            // 位置                // 纹理坐标
+            -quadWidth,  quadHeight,  0.0f, 0.0f,  // 左上
+            -quadWidth, -quadHeight,  0.0f, 1.0f,  // 左下
+            quadWidth, -quadHeight,  1.0f, 1.0f,  // 右下
+            quadWidth,  quadHeight,  1.0f, 0.0f   // 右上
     };
     unsigned int indices[] = {
             0, 1, 2,

@@ -1,39 +1,4 @@
-// Write C++ code here.
-//
-// Do not forget to dynamically load the C++ library into your application.
-//
-// For instance,
-//
-// In MainActivity.java:
-//    static {
-//       System.loadLibrary("ffmpegLearn");
-//    }
-//
-// Or, in MainActivity.kt:
-//    companion object {
-//      init {
-//         System.loadLibrary("ffmpegLearn")
-//      }
-//    }
-
-#include <jni.h>
-#include <string>
-#include <sstream>
-#include <android/log.h>
-#include <android/imagedecoder.h>
-#include <format>
-#include <sys/stat.h>
-#include <exception>
-
-#include "transcode.hpp"
-#include "logging.hpp"
-#include "lame.h"
-// #include "sRTGenerator.cpp"
-#include "Mp3Encoder.hpp"
-#include "FFmpegDecoder.hpp"
-#include "OpenSLLearn.hpp"
-#include "OpenGLLearn.hpp"
-
+#include "ffmpegLearn.hpp"
 
 constexpr const char* TAG = "ffmpegLearn";
 
@@ -78,16 +43,22 @@ Java_edu_tyut_ffmpeglearn_utils_Utils_getFfmpegInfo(
     version << "avcodecConfiguration: " << avcodec_configuration() << "\n";
     version << "avcodecLicense: " << avcodec_license() << "\n";
     logger::info(TAG, "format: %s", version.str().c_str());
+    list_protocols();
     return env->NewStringUTF(version.str().c_str());
 }
 
 void list_protocols() {
-    void* opaque = nullptr;
-    const char* name = nullptr;
+    void *opaque = nullptr;
+    const char *name = nullptr;
 
     logger::info(TAG, "Input protocols:");
     while ((name = avio_enum_protocols(&opaque, 0))) {
         logger::info(TAG, "  %s", name);  // 这里应当包含 file
+    }
+
+    const AVInputFormat *iformat = nullptr;
+    while ((iformat = av_demuxer_iterate(&opaque))) {
+        logger::info(TAG, "Demuxer: %s", iformat->name);
     }
 }
 
@@ -286,11 +257,7 @@ Java_edu_tyut_ffmpeglearn_utils_Utils_getVideoDuration(
     av_log_set_callback(log_callback);
 
     list_protocols();
-    void* opaque = nullptr;
-    const AVInputFormat* iformat = nullptr;
-    while ((iformat = av_demuxer_iterate(&opaque))) {
-        logger::info(TAG, "Demuxer: %s", iformat->name);
-    }
+
     av_log_set_callback([](void* ptr, int level, const char* fmt, va_list vl) {
         if (level <= AV_LOG_INFO) {
             char log[1024];
