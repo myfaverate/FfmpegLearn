@@ -1,0 +1,14 @@
+prefix=./android_build/x86
+exec_prefix=${prefix}
+libdir=./android_build/x86/lib
+includedir=./android_build/x86/include
+
+Name: libavcodec
+Description: FFmpeg codec library
+Version: 61.19.101
+Requires: 
+Requires.private: libswresample >= 5.3.100, libavutil >= 59.39.100
+Conflicts:
+Libs: -L${libdir}  -lavcodec 
+Libs.private: -pthread -lm -latomic -lmp3lame -lm -L/home/zsh/x264/android_build/x86/lib -lx264 -L/home/zsh/x265_git/build/android_x86/android_build/x86/lib -lx265 -landroid -lmediandk -L/home/zsh/zlib-1.3.1/android_build/x86/lib -lz
+Cflags: -I${includedir}

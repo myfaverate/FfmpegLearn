@@ -1,0 +1,14 @@
+prefix=/home/zsh/freetype/android_build/x86_64
+exec_prefix=/home/zsh/freetype/android_build/x86_64
+libdir=/home/zsh/freetype/android_build/x86_64/lib
+includedir=/home/zsh/freetype/android_build/x86_64/include
+
+Name: FreeType 2
+URL: https://freetype.org
+Description: A free, high-quality, and portable font engine.
+Version: 26.2.20
+Requires: 
+Requires.private: zlib
+Libs: -L/home/zsh/freetype/android_build/x86_64/lib -lfreetype
+Libs.private: 
+Cflags: -I${includedir}/freetype2

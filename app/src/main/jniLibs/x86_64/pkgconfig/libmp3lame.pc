@@ -1,0 +1,10 @@
+prefix=/home/zsh/lame-3.100/android_build/x86_64
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: LAME
+Description: LAME MP3 encoder library
+Version: 3.100
+Libs: -L${libdir} -lmp3lame -lm
+Cflags: -I${includedir}
