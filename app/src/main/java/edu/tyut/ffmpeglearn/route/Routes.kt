@@ -14,6 +14,8 @@ internal sealed class Routes {
     @Serializable
     internal object Camera
     @Serializable
+    internal object Service
+    @Serializable
     internal object Surface
     @Serializable
     internal data class Player(

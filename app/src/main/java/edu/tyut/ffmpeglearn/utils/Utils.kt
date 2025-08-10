@@ -1,8 +1,11 @@
 package edu.tyut.ffmpeglearn.utils
 
 import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.content.Context
 import android.net.Uri
+import android.os.Build
+import android.os.Process
 import android.view.Surface
 import androidx.core.content.FileProvider
 import java.io.File
@@ -34,6 +37,17 @@ internal object Utils {
             context.contentResolver.openOutputStream(output)?.use { outputStream: OutputStream ->
                 inputStream.copyTo(out = outputStream, bufferSize = 1 shl 10 shl 10)
             }
+        }
+    }
+    internal fun getProcessName(context: Context): String {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Process.myProcessName()
+        } else {
+            val pid: Int = Process.myPid()
+            val activityManager: ActivityManager = context.getSystemService<ActivityManager>(
+                ActivityManager::class.java)
+            val processName: String = activityManager.runningAppProcesses?.firstOrNull { it.pid == pid }?.processName ?: "unknown"
+            return processName
         }
     }
     init {

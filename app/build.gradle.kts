@@ -55,6 +55,7 @@ android {
     buildFeatures {
         buildConfig = true
         compose = true
+        aidl = true
     }
     externalNativeBuild {
         cmake {
@@ -65,8 +66,12 @@ android {
 }
 
 dependencies {
+
+    // lifecycle-service
+    implementation(libs.androidx.lifecycle.service)
     // exoplayer
     implementation(libs.androidx.exoplayer)
+
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

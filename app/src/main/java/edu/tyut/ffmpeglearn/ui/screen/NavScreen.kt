@@ -31,7 +31,7 @@ internal fun NavScreen(
         NavHost(
             modifier = modifier,
             navController = navHostController,
-            startDestination = Routes.Camera
+            startDestination = Routes.Service
         ) {
             composable<Routes.Greeting>{
                 Greeting(
@@ -74,6 +74,13 @@ internal fun NavScreen(
             composable<Routes.Camera> { navBackStackEntry:  NavBackStackEntry ->
                 Log.i(TAG, "NavScreen -> CameraScreen")
                 CameraScreen(
+                    navHostController = navHostController,
+                    snackBarHostState = snackBarHostState,
+                )
+            }
+            composable<Routes.Service> { navBackStackEntry:  NavBackStackEntry ->
+                Log.i(TAG, "NavScreen -> ServiceScreen")
+                ServiceScreen(
                     navHostController = navHostController,
                     snackBarHostState = snackBarHostState,
                 )
